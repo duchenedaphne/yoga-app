@@ -7,7 +7,7 @@
 - [Angular CLI](https://github.com/angular/angular-cli) version 14.2.1
 - [Java 11](https://www.oracle.com/java/technologies/downloads/)
 - Spring Boot
-- Maven
+- [Maven](https://maven.apache.org/download.cgi)
 - [MySQL](https://www.mysql.com/fr/downloads/)
 
 ## Start the project
@@ -47,6 +47,9 @@ Launch the backend server with Spring Boot and Maven :
 #### Test
 Launch and generate the jacoco code coverage:
 > mvn clean test
+
+The report is available in the `target` folder :
+> target/site/jacoco/index.html
 
 ### Front-end :
 

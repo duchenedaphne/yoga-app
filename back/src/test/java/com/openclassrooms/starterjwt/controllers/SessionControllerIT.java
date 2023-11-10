@@ -18,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.openclassrooms.starterjwt.mapper.SessionMapper;
@@ -77,11 +78,11 @@ public class SessionControllerIT {
 
         sessionController.findById(Long.toString(session.getId()));
 
-        ResultActions response = mockMvc.perform(
-            get("/api/session/{id}")
-            .param("id", "1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(sessionMapper.toDto(session).toString())
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .get("/api/session/{id}")
+                .param("id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sessionMapper.toDto(session).toString())
         );
 
         response
@@ -98,9 +99,9 @@ public class SessionControllerIT {
 
         sessionController.findAll();
 
-        ResultActions response = mockMvc.perform(
-            get("/api/session")
-            .contentType(MediaType.APPLICATION_JSON)
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .get("/api/session")
+                .contentType(MediaType.APPLICATION_JSON)
         );
 
         response
@@ -118,9 +119,10 @@ public class SessionControllerIT {
 
         sessionController.create(sessionMapper.toDto(session));
 
-        ResultActions response = mockMvc.perform(post("/api/session")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(sessionMapper.toDto(session).toString())
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .post("/api/session")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sessionMapper.toDto(session).toString())
         );
 
         response
@@ -135,10 +137,11 @@ public class SessionControllerIT {
 
         sessionController.update(Long.toString(session.getId()), sessionMapper.toDto(session));
 
-        ResultActions response = mockMvc.perform(put("/api/session/{id}")
-            .param("id", "1")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(sessionMapper.toDto(session).toString())
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .put("/api/session/{id}")
+                .param("id", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sessionMapper.toDto(session).toString())
         );
 
         response
@@ -153,8 +156,8 @@ public class SessionControllerIT {
 
         sessionController.save(Long.toString(session.getId()));
 
-        ResultActions response = mockMvc.perform(
-            delete("/api/session/{id}")
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .delete("/api/session/{id}")
                 .param("id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
         );
@@ -171,8 +174,8 @@ public class SessionControllerIT {
 
         sessionController.participate(Long.toString(session.getId()), "1");
 
-        ResultActions response = mockMvc.perform(
-            post("/api/session/{id}/participate/{userId}")
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .post("/api/session/{id}/participate/{userId}")
                 .param("id", "1")
                 .param("userId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -190,8 +193,8 @@ public class SessionControllerIT {
 
         sessionController.noLongerParticipate(Long.toString(session.getId()), "1");
 
-        ResultActions response = mockMvc.perform(
-            delete("/api/session/{id}/participate/{userId}")
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+            .delete("/api/session/{id}/participate/{userId}")
                 .param("id", "1")
                 .param("userId", "1")
                 .contentType(MediaType.APPLICATION_JSON)

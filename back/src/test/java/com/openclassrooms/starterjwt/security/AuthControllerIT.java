@@ -54,8 +54,7 @@ public class AuthControllerIT {
     @Mock
     private UserMapper userMapper;
 
-    /*
-    @Test
+    // @Test
     public void login_shouldReturn_jwtResponse() throws Exception {
 
         LoginRequest loginRequest = new LoginRequest();
@@ -79,7 +78,6 @@ public class AuthControllerIT {
             .andExpect(MockMvcResultMatchers.status().isOk());
             // .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(userMapper.toDto(user))))
     }
-    */
 
     @Test
     public void register_shouldReturn_okStatus() throws Exception {

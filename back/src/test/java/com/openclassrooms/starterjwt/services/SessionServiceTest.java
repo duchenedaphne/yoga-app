@@ -1,5 +1,8 @@
 package com.openclassrooms.starterjwt.services;
 
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.openclassrooms.starterjwt.models.Session;
 import com.openclassrooms.starterjwt.models.Teacher;
+import com.openclassrooms.starterjwt.models.User;
 import com.openclassrooms.starterjwt.repository.SessionRepository;
 import com.openclassrooms.starterjwt.repository.TeacherRepository;
 import com.openclassrooms.starterjwt.repository.UserRepository;
@@ -54,6 +58,8 @@ public class SessionServiceTest {
             
         session = Session.builder()
             .id(sessionId)
+            .createdAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay())
+            .updatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay())
             .name("Beginners")
             .date(new Date())
             .description("yoga test")
@@ -65,20 +71,22 @@ public class SessionServiceTest {
     public void findAll_shouldReturn_sessionsList() {
         
         Long teacherId2 = 2L;
-        Teacher teacher2 = Teacher.builder()
-            .id(teacherId2)
-            .lastName("Second")
-            .firstName("Teacher")
-            .build();
+        Teacher teacher2 = new Teacher();
+        teacher2.setId(teacherId2);
+        teacher2.setLastName("Second");
+        teacher2.setFirstName("Teacher");
+        teacher2.setCreatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
+        teacher2.setUpdatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
             
         Long sessionId = 2L;
-        Session session2 = Session.builder()
-            .id(sessionId)
-            .name("Beginners")
-            .date(new Date())
-            .description("yoga test")
-            .teacher(teacher2)
-            .build();
+        Session session2 = new Session();
+        session2.setId(sessionId);
+        session2.setName("Beginners");
+        session2.setDate(new Date());
+        session2.setDescription("yoga test");
+        session2.setTeacher(teacher2);
+        session2.setCreatedAt(LocalDate.of(2023, Month.NOVEMBER, 9).atStartOfDay());
+        session2.setUpdatedAt(LocalDate.of(2023, Month.NOVEMBER, 9).atStartOfDay());
         
         when(sessionRepository.findAll()).thenReturn(Arrays.asList(session, session2));
 
@@ -98,7 +106,17 @@ public class SessionServiceTest {
 
         verify(sessionRepository).save(session);
 
-        Assertions.assertThat(savedSession).isNotNull();
+        Assertions.assertThat(savedSession).isEqualTo(session);
+        Assertions.assertThat(savedSession.toString()).isEqualTo(session.toString());
+        Assertions.assertThat(session.toString()).isEqualTo(savedSession.toString());
+        Assertions.assertThat(session.getUsers()).isEqualTo(savedSession.getUsers());
+        Assertions.assertThat(savedSession.getId()).isEqualTo(session.getId());
+        Assertions.assertThat(savedSession.getName()).isEqualTo(session.getName());
+        Assertions.assertThat(savedSession.getDate()).isEqualTo(session.getDate());
+        Assertions.assertThat(savedSession.getDescription()).isEqualTo(session.getDescription());
+        Assertions.assertThat(savedSession.getTeacher()).isEqualTo(session.getTeacher());
+        Assertions.assertThat(savedSession.getCreatedAt()).isEqualTo(session.getCreatedAt());
+        Assertions.assertThat(savedSession.getUpdatedAt()).isEqualTo(session.getUpdatedAt());
     }
 
     @Test 
@@ -141,5 +159,84 @@ public class SessionServiceTest {
         verify(sessionRepository, times(1)).deleteById(session.getId());
 
         assertAll(() -> sessionService.delete(session.getId()));
-    }    
+    }
+
+    // @Test 
+    public void participate_shouldReturn_void() {
+
+        Long userId = 1L;
+        User user = User.builder()
+            .id(userId)
+            .lastName("Basic")
+            .firstName("User")
+            .email("test@email.com")
+            .password("password")
+            .admin(false)
+            .build();
+
+        User fakeUser = new User();
+        fakeUser.setId(2L);
+        fakeUser.setLastName("Fake");
+        fakeUser.setFirstName("User");
+        fakeUser.setEmail("fake@email.com");
+        fakeUser.setPassword("password");
+        fakeUser.setAdmin(false);
+        fakeUser.setCreatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
+        fakeUser.setUpdatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
+
+        List<User> users = new ArrayList<User>(Arrays.asList(user, fakeUser));
+        session.setUsers(users);
+        session.getUsers().remove(user);
+            
+        when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
+        
+        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+        
+        when(sessionRepository.save(Mockito.any(Session.class))).thenReturn(session);
+        
+        sessionService.participate(session.getId(), user.getId());
+
+        // List<User> usersList = Arrays.asList(user);
+
+        verify(sessionRepository).findById(session.getId());
+        verify(userRepository).findById(user.getId()); 
+        verify(sessionRepository).save(session);
+
+        // Assertions.assertThat(session.getUsers()).isEqualTo(usersList);
+        assertAll(() -> sessionService.participate(session.getId(), user.getId()));
+    }
+   
+    // @Test 
+    public void noLongerParticipate_shouldReturn_void() {
+        
+        Long userId = 1L;
+        User user = User.builder()
+            .id(userId)
+            .lastName("Basic")
+            .firstName("User")
+            .email("test@email.com")
+            .password("password")
+            .admin(false)
+            .build();
+        User fakeUser = new User();
+        fakeUser.setId(2L);
+
+        List<User> users = new ArrayList<>(Arrays.asList(fakeUser, user));
+        session.setUsers(users);
+        session.getUsers().add(user);
+
+        when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+
+        when(sessionRepository.save(Mockito.any(Session.class))).thenReturn(session);
+        
+        sessionService.noLongerParticipate(session.getId(), user.getId());
+
+        verify(sessionRepository).findById(session.getId());
+        verify(sessionRepository).save(session);
+
+        // Assertions.assertThat(session.getUsers()).isEqualTo(users);
+        assertAll(() -> sessionService.noLongerParticipate(session.getId(), user.getId()));
+    }
 }

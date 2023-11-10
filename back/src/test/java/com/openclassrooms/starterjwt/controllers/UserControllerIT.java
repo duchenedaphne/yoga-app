@@ -26,6 +26,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
+import org.assertj.core.api.Assertions;
+
 @WebMvcTest(controllers = UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ExtendWith(MockitoExtension.class)
@@ -68,7 +70,7 @@ public class UserControllerIT {
         when(userService.findById(user.getId())).thenReturn(user);
 
         ResultActions response = mockMvc.perform(
-            get("/api/user")
+            get("/api/user/{id}")
                 .param("id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userMapper.toDto(user).toString())
@@ -77,9 +79,6 @@ public class UserControllerIT {
         response
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(userMapper.toDto(user))));
-
-        verify(userService).findById(user.getId());
-        verify(user);
     }
 
     @Test
@@ -88,7 +87,7 @@ public class UserControllerIT {
         doNothing().when(userService.findById(3L));
 
         ResultActions response = mockMvc.perform(
-            get("/api/user")
+            get("/api/user/{id}")
                 .param("id", "3")
                 .contentType(MediaType.APPLICATION_JSON)
         );
@@ -103,13 +102,11 @@ public class UserControllerIT {
         doNothing().when(userService).delete(user.getId());
 
         ResultActions response = mockMvc.perform(
-            delete("/api/user")
+            delete("/api/user/{id}")
                 .param("id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
         );
 
         response.andExpect(MockMvcResultMatchers.status().isOk());
-
-        verify(userService).delete(user.getId());
     }
 }

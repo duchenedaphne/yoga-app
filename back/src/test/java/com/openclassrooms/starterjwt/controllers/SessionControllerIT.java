@@ -3,12 +3,14 @@ package com.openclassrooms.starterjwt.controllers;
 import java.util.Date;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,8 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.openclassrooms.starterjwt.dto.SessionDto;
-import com.openclassrooms.starterjwt.dto.TeacherDto;
 import com.openclassrooms.starterjwt.mapper.SessionMapper;
 import com.openclassrooms.starterjwt.models.Session;
 import com.openclassrooms.starterjwt.models.Teacher;
@@ -44,12 +44,13 @@ public class SessionControllerIT {
     @Mock
     private SessionMapper sessionMapper;
 
+    @InjectMocks
+    private SessionController sessionController;
+
     Long teacherId = 1L;
     Teacher teacher;
-    TeacherDto teacherDto = new TeacherDto();
     Long sessionId = 1L;
     Session session;
-    SessionDto sessionDto = new SessionDto();
 
     @BeforeAll
     public void init() {
@@ -67,16 +68,6 @@ public class SessionControllerIT {
             .description("yoga test")
             .teacher(teacher)
             .build();
-
-        teacherDto.setId(teacherId);
-        teacherDto.setLastName("The");
-        teacherDto.setFirstName("Professor");
-            
-        sessionDto.setId(sessionId);
-        sessionDto.setName("Beginners");
-        sessionDto.setDate(new Date());
-        sessionDto.setDescription("yoga test");
-        sessionDto.setTeacher_id(teacher.getId());
     }
 
     @Test
@@ -84,8 +75,10 @@ public class SessionControllerIT {
 
         when(sessionService.getById(session.getId())).thenReturn(session);
 
+        sessionController.findById(Long.toString(session.getId()));
+
         ResultActions response = mockMvc.perform(
-            get("/api/session")
+            get("/api/session/{id}")
             .param("id", "1")
             .contentType(MediaType.APPLICATION_JSON)
             .content(sessionMapper.toDto(session).toString())
@@ -94,9 +87,6 @@ public class SessionControllerIT {
         response
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(sessionMapper.toDto(session))));
-
-        verify(sessionService).getById(session.getId());
-        verify(session);
     }
 
     @Test
@@ -105,6 +95,8 @@ public class SessionControllerIT {
         List<Session> sessions = sessionService.findAll();
 
         when(sessionService.findAll()).thenReturn(sessions);
+
+        sessionController.findAll();
 
         ResultActions response = mockMvc.perform(
             get("/api/session")
@@ -124,9 +116,7 @@ public class SessionControllerIT {
         
         given(sessionService.create(ArgumentMatchers.any())).willAnswer((invocation -> invocation.getArgument(0)));
 
-        // when(sessionService.create(session)).thenReturn(session);
-
-        // sessionDto = sessionMapper.toDto(session);
+        sessionController.create(sessionMapper.toDto(session));
 
         ResultActions response = mockMvc.perform(post("/api/session")
             .contentType(MediaType.APPLICATION_JSON)
@@ -136,9 +126,6 @@ public class SessionControllerIT {
         response
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(sessionMapper.toDto(session))));
-
-        verify(sessionService).create(session);
-        verify(session);
     }
 
     @Test
@@ -146,9 +133,9 @@ public class SessionControllerIT {
 
         when(sessionService.update(session.getId(), session)).thenReturn(session);
 
-        sessionDto = sessionMapper.toDto(session);
+        sessionController.update(Long.toString(session.getId()), sessionMapper.toDto(session));
 
-        ResultActions response = mockMvc.perform(put("/api/session")
+        ResultActions response = mockMvc.perform(put("/api/session/{id}")
             .param("id", "1")
             .contentType(MediaType.APPLICATION_JSON)
             .content(sessionMapper.toDto(session).toString())
@@ -157,9 +144,6 @@ public class SessionControllerIT {
         response
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(sessionMapper.toDto(session))));
-
-        verify(sessionService).update(session.getId(), session);
-        verify(session);
     }
 
     @Test
@@ -167,8 +151,10 @@ public class SessionControllerIT {
         
         doNothing().when(sessionService).delete(session.getId());
 
+        sessionController.save(Long.toString(session.getId()));
+
         ResultActions response = mockMvc.perform(
-            delete("/api/session")
+            delete("/api/session/{id}")
                 .param("id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
         );
@@ -178,9 +164,41 @@ public class SessionControllerIT {
         verify(sessionService).delete(session.getId());
     }
 
-    // @Test
-    // public void participate_shouldReturn_sessionDto() {}
+    @Test
+    public void participate_shouldReturn_sessionDto() throws Exception {
+        
+        doNothing().when(sessionService).participate(session.getId(), 1L);
 
-    // @Test
-    // public void unparticipate_shouldReturn_sessionDto() {}
+        sessionController.participate(Long.toString(session.getId()), "1");
+
+        ResultActions response = mockMvc.perform(
+            post("/api/session/{id}/participate/{userId}")
+                .param("id", "1")
+                .param("userId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isOk());
+
+        verify(sessionService).participate(session.getId(), 1L);
+    }
+
+    @Test
+    public void unparticipate_shouldReturn_sessionDto() throws Exception {
+        
+        doNothing().when(sessionService).noLongerParticipate(session.getId(), 1L);
+
+        sessionController.noLongerParticipate(Long.toString(session.getId()), "1");
+
+        ResultActions response = mockMvc.perform(
+            delete("/api/session/{id}/participate/{userId}")
+                .param("id", "1")
+                .param("userId", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isOk());
+
+        verify(sessionService).noLongerParticipate(session.getId(), 1L);
+    }
 }

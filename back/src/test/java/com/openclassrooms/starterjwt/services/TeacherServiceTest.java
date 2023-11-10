@@ -8,6 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,8 @@ public class TeacherServiceTest {
     public void init() {
         teacher = Teacher.builder()
             .id(teacherId)
+            .createdAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay())
+            .updatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay())
             .lastName("The")
             .firstName("Professor")
             .build();
@@ -43,11 +47,12 @@ public class TeacherServiceTest {
     public void findAll_shouldReturn_teachersList() {
         
         Long teacherId2 = 2L;
-        Teacher teacher2 = Teacher.builder()
-            .id(teacherId2)
-            .lastName("The")
-            .firstName("Professor")
-            .build();
+        Teacher teacher2 = new Teacher();
+        teacher2.setId(teacherId2);
+        teacher2.setLastName("Second");
+        teacher2.setFirstName("Teacher");
+        teacher2.setCreatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
+        teacher2.setUpdatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
 
         when(teacherRepository.findAll()).thenReturn(Arrays.asList(teacher, teacher2));
 
@@ -67,6 +72,13 @@ public class TeacherServiceTest {
 
         verify(teacherRepository).findById(teacher.getId());
 
-        Assertions.assertThat(savedTeacher).isNotNull();
+        Assertions.assertThat(savedTeacher).isEqualTo(teacher);
+        Assertions.assertThat(savedTeacher.toString()).isEqualTo(teacher.toString());
+        Assertions.assertThat(teacher.toString()).isEqualTo(savedTeacher.toString());
+        Assertions.assertThat(savedTeacher.getId()).isEqualTo(teacher.getId());
+        Assertions.assertThat(savedTeacher.getFirstName()).isEqualTo(teacher.getFirstName());
+        Assertions.assertThat(savedTeacher.getLastName()).isEqualTo(teacher.getLastName());
+        Assertions.assertThat(savedTeacher.getCreatedAt()).isEqualTo(teacher.getCreatedAt());
+        Assertions.assertThat(savedTeacher.getUpdatedAt()).isEqualTo(teacher.getUpdatedAt());
     }
 }

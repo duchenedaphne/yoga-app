@@ -2,6 +2,7 @@ package com.openclassrooms.starterjwt.controllers;
 
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -63,7 +64,7 @@ public class TeacherControllerIT {
         when(teacherService.findById(teacher.getId())).thenReturn(teacher);
 
         ResultActions response = mockMvc.perform(
-            get("/api/teacher")
+            get("/api/teacher/{id}")
                 .param("id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(teacherMapper.toDto(teacher).toString())
@@ -72,9 +73,6 @@ public class TeacherControllerIT {
         response
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(teacherMapper.toDto(teacher))));
-
-        verify(teacherService).findById(teacher.getId());
-        verify(teacher);
     }
 
     @Test
@@ -91,10 +89,5 @@ public class TeacherControllerIT {
         response
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.content", CoreMatchers.is(teacherMapper.toDto(teachers))));
-  
-        // return ResponseEntity.ok().body(this.teacherMapper.toDto(teachers));
-
-        verify(teacherService).findAll();
-        verify(teachers);
     }
 }

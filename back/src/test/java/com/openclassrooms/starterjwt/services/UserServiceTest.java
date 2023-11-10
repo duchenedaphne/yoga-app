@@ -1,5 +1,7 @@
 package com.openclassrooms.starterjwt.services;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
@@ -33,6 +35,8 @@ public class UserServiceTest {
     public void init() {
         user = User.builder()
             .id(userId)
+            .createdAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay())
+            .updatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay())
             .lastName("Basic")
             .firstName("User")
             .email("test@email.com")
@@ -50,7 +54,17 @@ public class UserServiceTest {
         
         verify(userRepository).findById(user.getId());
 
-        Assertions.assertThat(savedUser).isNotNull();
+        Assertions.assertThat(savedUser).isEqualTo(user);
+        Assertions.assertThat(savedUser.toString()).isEqualTo(user.toString());
+        Assertions.assertThat(user.toString()).isEqualTo(savedUser.toString());
+        Assertions.assertThat(savedUser.getId()).isEqualTo(user.getId());
+        Assertions.assertThat(savedUser.getLastName()).isEqualTo(user.getLastName());
+        Assertions.assertThat(savedUser.getFirstName()).isEqualTo(user.getFirstName());
+        Assertions.assertThat(savedUser.getEmail()).isEqualTo(user.getEmail());
+        Assertions.assertThat(savedUser.getPassword()).isEqualTo(user.getPassword());
+        Assertions.assertThat(savedUser.isAdmin()).isEqualTo(user.isAdmin());
+        Assertions.assertThat(savedUser.getCreatedAt()).isEqualTo(user.getCreatedAt());
+        Assertions.assertThat(savedUser.getUpdatedAt()).isEqualTo(user.getUpdatedAt());
     }
     
     @Test

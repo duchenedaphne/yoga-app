@@ -17,6 +17,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.openclassrooms.starterjwt.exception.BadRequestException;
+import com.openclassrooms.starterjwt.exception.NotFoundException;
 import com.openclassrooms.starterjwt.models.Session;
 import com.openclassrooms.starterjwt.models.Teacher;
 import com.openclassrooms.starterjwt.models.User;
@@ -26,6 +28,7 @@ import com.openclassrooms.starterjwt.repository.UserRepository;
 import com.openclassrooms.starterjwt.services.SessionService;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -161,9 +164,94 @@ public class SessionServiceTest {
         assertAll(() -> sessionService.delete(session.getId()));
     }
 
-    // @Test 
+    @Test
     public void participate_shouldReturn_void() {
 
+        Long userId = 1L;
+        User user = User.builder()
+            .id(userId)
+            .lastName("Basic")
+            .firstName("User")
+            .email("test@email.com")
+            .password("password")
+            .admin(false)
+            .build();
+
+        List<User> users = new ArrayList<User>(Arrays.asList());
+        session.setUsers(users);
+            
+        when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
+        
+        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+        
+        when(sessionRepository.save(Mockito.any(Session.class))).thenReturn(session);
+        
+        assertAll(() -> sessionService.participate(session.getId(), user.getId()));
+
+        verify(sessionRepository).findById(session.getId());
+        verify(userRepository).findById(user.getId()); 
+        verify(sessionRepository).save(session);
+    }
+
+    @Test
+    public void participate_withNullParams_shouldThrow_exception() {
+
+        Long userId = 1L;
+        User user = User.builder()
+            .id(userId)
+            .lastName("Basic")
+            .firstName("User")
+            .email("test@email.com")
+            .password("password")
+            .admin(false)
+            .build();
+
+        List<User> users = new ArrayList<User>(Arrays.asList());
+        session.setUsers(users);
+            
+        when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
+        
+        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(null));
+
+        Exception exception = assertThrows(NotFoundException.class, () -> sessionService.participate(session.getId(), user.getId()));
+
+        verify(sessionRepository).findById(session.getId());
+        verify(userRepository).findById(user.getId());
+
+        Assertions.assertThat(exception).isNotNull();
+    }
+
+    @Test
+    public void participate_withTrue_alreadyParticipate_shouldThrow_exception() {
+
+        Long userId = 1L;
+        User user = User.builder()
+            .id(userId)
+            .lastName("Basic")
+            .firstName("User")
+            .email("test@email.com")
+            .password("password")
+            .admin(false)
+            .build();
+
+        List<User> users = new ArrayList<User>(Arrays.asList(user));
+        session.setUsers(users);
+            
+        when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
+        
+        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+
+        Exception exception = assertThrows(BadRequestException.class, () -> sessionService.participate(session.getId(), user.getId()));
+
+        verify(sessionRepository).findById(session.getId());
+        verify(userRepository).findById(user.getId()); 
+
+        Assertions.assertThat(exception).isNotNull();
+    }
+   
+    @Test 
+    public void noLongerParticipate_shouldReturn_void() {
+        
         Long userId = 1L;
         User user = User.builder()
             .id(userId)
@@ -184,31 +272,22 @@ public class SessionServiceTest {
         fakeUser.setCreatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
         fakeUser.setUpdatedAt(LocalDate.of(2023, Month.NOVEMBER, 10).atStartOfDay());
 
-        List<User> users = new ArrayList<User>(Arrays.asList(user, fakeUser));
+        List<User> users = new ArrayList<>(Arrays.asList(fakeUser, user));
         session.setUsers(users);
-        session.getUsers().remove(user);
-            
+
         when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
-        
-        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
-        
+
         when(sessionRepository.save(Mockito.any(Session.class))).thenReturn(session);
         
-        sessionService.participate(session.getId(), user.getId());
-
-        // List<User> usersList = Arrays.asList(user);
+        assertAll(() -> sessionService.noLongerParticipate(session.getId(), user.getId()));
 
         verify(sessionRepository).findById(session.getId());
-        verify(userRepository).findById(user.getId()); 
         verify(sessionRepository).save(session);
-
-        // Assertions.assertThat(session.getUsers()).isEqualTo(usersList);
-        assertAll(() -> sessionService.participate(session.getId(), user.getId()));
     }
-   
-    // @Test 
-    public void noLongerParticipate_shouldReturn_void() {
-        
+
+    @Test
+    public void noLongerparticipate_withFalse_alreadyParticipate_shouldThrow_exception() {
+
         Long userId = 1L;
         User user = User.builder()
             .id(userId)
@@ -218,25 +297,41 @@ public class SessionServiceTest {
             .password("password")
             .admin(false)
             .build();
-        User fakeUser = new User();
-        fakeUser.setId(2L);
 
-        List<User> users = new ArrayList<>(Arrays.asList(fakeUser, user));
+        List<User> users = new ArrayList<User>(Arrays.asList());
         session.setUsers(users);
-        session.getUsers().add(user);
-
+            
         when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(session));
 
-        when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
-
-        when(sessionRepository.save(Mockito.any(Session.class))).thenReturn(session);
-        
-        sessionService.noLongerParticipate(session.getId(), user.getId());
+        Exception exception = assertThrows(BadRequestException.class, () -> sessionService.noLongerParticipate(session.getId(), user.getId()));
 
         verify(sessionRepository).findById(session.getId());
-        verify(sessionRepository).save(session);
 
-        // Assertions.assertThat(session.getUsers()).isEqualTo(users);
-        assertAll(() -> sessionService.noLongerParticipate(session.getId(), user.getId()));
+        Assertions.assertThat(exception).isNotNull();
+    }
+
+    @Test
+    public void noLongerParticipate_withNullParams_shouldThrow_exception() {
+
+        Long userId = 1L;
+        User user = User.builder()
+            .id(userId)
+            .lastName("Basic")
+            .firstName("User")
+            .email("test@email.com")
+            .password("password")
+            .admin(false)
+            .build();
+
+        List<User> users = new ArrayList<User>(Arrays.asList(user));
+        session.setUsers(users);
+            
+        when(sessionRepository.findById(session.getId())).thenReturn(Optional.ofNullable(null));
+
+        Exception exception = assertThrows(NotFoundException.class, () -> sessionService.noLongerParticipate(session.getId(), user.getId()));
+
+        verify(sessionRepository).findById(session.getId());
+
+        Assertions.assertThat(exception).isNotNull();
     }
 }

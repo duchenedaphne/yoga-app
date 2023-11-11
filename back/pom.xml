@@ -181,6 +181,7 @@
 						<configuration>
 							<excludes>
 								<exclude>com/openclassrooms/starterjwt/**/*Dto.*</exclude>
+								<exclude>com/openclassrooms/starterjwt/payload/**/**</exclude>
 							</excludes>
 						</configuration>
 					</execution>

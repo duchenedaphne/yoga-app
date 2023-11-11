@@ -44,13 +44,17 @@ public class SessionService {
     }
 
     public void participate(Long id, Long userId) {
+
         Session session = this.sessionRepository.findById(id).orElse(null);
+
         User user = this.userRepository.findById(userId).orElse(null);
+
         if (session == null || user == null) {
             throw new NotFoundException();
         }
 
         boolean alreadyParticipate = session.getUsers().stream().anyMatch(o -> o.getId().equals(userId));
+        
         if(alreadyParticipate) {
             throw new BadRequestException();
         }

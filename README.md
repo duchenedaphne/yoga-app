@@ -30,9 +30,8 @@ By default the admin account is:
 Go inside folder :
 > cd back
 
-In your IDE :   
-create 2 environment variables named `DB_USER` and `DB_PASSWORD`,  
-with your database credentials for the application.properties file :
+Add your database credentials in the application.properties file   
+( Warning : environment variables won't work. ) :
 
 >spring.datasource.username=${DB_USER}
 

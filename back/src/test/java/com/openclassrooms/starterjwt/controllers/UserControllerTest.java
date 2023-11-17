@@ -6,9 +6,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,27 +22,43 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.openclassrooms.starterjwt.dto.UserDto;
 import com.openclassrooms.starterjwt.mapper.UserMapper;
 import com.openclassrooms.starterjwt.models.User;
+import com.openclassrooms.starterjwt.security.jwt.AuthEntryPointJwt;
+import com.openclassrooms.starterjwt.security.jwt.JwtUtils;
+import com.openclassrooms.starterjwt.security.services.UserDetailsImpl;
 import com.openclassrooms.starterjwt.services.UserService;
+
 import com.openclassrooms.starterjwt.controllers.UserController;
 
 import org.assertj.core.api.Assertions;
 
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletException;
+import org.springframework.security.core.AuthenticationException;
+
 import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
+
+    @Autowired
+    private AuthenticationException authException;
     
     @Mock
     private UserService userService;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private JwtUtils jwtUtils;
+    @Mock
+    private AuthEntryPointJwt authEntryPointJwt;
 
     @InjectMocks
     private UserController userController;
@@ -143,22 +162,28 @@ public class UserControllerTest {
     
     @Test
     public void save_shouldReturn_ok() {
+    
+        UserDetails userDetails = new UserDetailsImpl(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), user.isAdmin(), user.getPassword());
 
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null);
 
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-            user.getEmail(), "password", authorities
-        );;
+        String jwts = "token";
 
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails,
-                null);
-        
-        SecurityContextHolder.getContext().setAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
         
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        when(jwtUtils.generateJwtToken(authentication)).thenReturn(jwts);
+
+        String token = jwtUtils.generateJwtToken(authentication);
+
+        when(jwtUtils.getUserNameFromJwtToken(token)).thenReturn(user.getEmail());
+        when(jwtUtils.validateJwtToken(token)).thenReturn(true);
+
+        String tokenUserName = jwtUtils.getUserNameFromJwtToken(token);
+        Boolean tokenValidate = jwtUtils.validateJwtToken(token);
 
         when(userService.findById(user.getId())).thenReturn(user);
         doNothing().when(userService).delete(user.getId());
@@ -166,32 +191,41 @@ public class UserControllerTest {
         ResponseEntity<?> responseEntity = userController.save("1");
 
         verify(userService, times(1)).delete(user.getId());
+        verify(jwtUtils, times(1)).getUserNameFromJwtToken(token);
+        verify(jwtUtils, times(1)).validateJwtToken(token);
         
         Assertions.assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+        Assertions.assertThat(tokenUserName).isEqualTo(user.getEmail());
+        Assertions.assertThat(tokenValidate).isTrue();
     }
     
     @Test
-    public void save_shouldReturn_unauthorized() {
+    public void save_shouldReturn_unauthorized() throws IOException, ServletException {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
             "random@test.com", "password", authorities
-        );;
+        );
 
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails,
-                null);
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails, null);
         
         SecurityContextHolder.getContext().setAuthentication(token);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
         
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
 
         when(userService.findById(user.getId())).thenReturn(user);
+        doNothing().when(authEntryPointJwt).commence(request, response, authException);
 
         ResponseEntity<?> responseEntity = userController.save("1");
+
+        authEntryPointJwt.commence(request, response, authException);
+        
+        assertAll(() -> authEntryPointJwt.commence(request, response, authException));
         
         Assertions.assertThat(responseEntity.getStatusCodeValue()).isEqualTo(401);
     }

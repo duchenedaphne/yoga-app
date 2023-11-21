@@ -4,8 +4,8 @@
 
 ## 🛠 Software tools
 
-- [Angular CLI](https://github.com/angular/angular-cli) version 14.2.1
-- [Java 11](https://www.oracle.com/java/technologies/downloads/)
+- [Angular](https://github.com/angular/angular-cli) 14
+- [Java](https://www.oracle.com/java/technologies/downloads/) 11
 - Spring Boot
 - [Maven](https://maven.apache.org/download.cgi)
 - [MySQL](https://www.mysql.com/fr/downloads/)
@@ -19,7 +19,8 @@ Clone this repository :
 
 Create a database with the name `test`.
 
-SQL script for creating the schema is available `ressources/sql/script.sql`
+SQL script for creating the schema is available in the `ressources` folder :   
+> ressources/sql/script.sql
 
 By default the admin account is:
 - login: yoga@studio.com
@@ -30,7 +31,7 @@ By default the admin account is:
 Go inside folder :
 > cd back
 
-Add your database credentials in the application.properties file   
+Add your database credentials to the `application.properties` file   
 ( Warning : environment variables won't work. ) :
 
 >spring.datasource.username=${DB_USER}
@@ -79,6 +80,9 @@ for following change:
 
 > npm run test:watch
 
+The report will be also available there :
+> front/coverage/jest/lcov-report/index.html
+
 - E2E
 
 Launching e2e test:
@@ -88,6 +92,9 @@ Launching e2e test:
 Generate coverage report (you should launch e2e test before):
 
 > npm run e2e:coverage
+
+The report will be also available there :
+> front/coverage/lcov-report/index.html
 
 #### Issues 
 
@@ -102,7 +109,7 @@ or if the Cypress app window doesn't show-up on your screen :
 
 3- Add this project's `front` folder to the cypress application,
 
-4- For Windows : in your terminal execute those 2 next command lines :
+4- For Windows, in your terminal execute those 2 next command lines :
 
 > set CYPRESS_VERIFY_TIMEOUT=100000
 
@@ -112,17 +119,6 @@ or if the Cypress app window doesn't show-up on your screen :
 
 6- In the Cypress application window :  
 Choose a Browser and Start E2E Testing.
-
-## Ressources
-
-### Postman collection
-
-For Postman import the collection
-> ressources/postman/yoga.postman_collection.json 
-
-by following the documentation: 
-
-https://learning.postman.com/docs/getting-started/importing-and-exporting-data/#importing-data-into-postman
 
 ## ✍ Testing scripts author
 Daphné Duchêne

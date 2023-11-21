@@ -98,14 +98,14 @@ The report will be also available there :
 
 #### Issues 
 
-If you've got the 'Command failed Time Out' issue   
+If you've got the 'Command failed Time Out' error,   
 or if the Cypress app window doesn't show-up on your screen :
 
 1- go to your cypress directory here :
 
 > C:\Users\\{YOUR_USERNAME}\AppData\Local\Cypress\Cache\10.4.0\Cypress
 
-2- Execute the Cypress.exe application,
+2- Execute the `Cypress.exe` application,
 
 3- Add this project's `front` folder to the cypress application,
 

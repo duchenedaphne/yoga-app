@@ -169,7 +169,6 @@
 								<exclude>com/openclassrooms/starterjwt/payload/**/**</exclude>
 								<exclude>com/openclassrooms/starterjwt/mapper/**</exclude>
 								<exclude>com/openclassrooms/starterjwt/models/**</exclude>
-								<exclude>com/openclassrooms/starterjwt/security/services/**</exclude>
 							</excludes>
 						</configuration>
 					</execution>

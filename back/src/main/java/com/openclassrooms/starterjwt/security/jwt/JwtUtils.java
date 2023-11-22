@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 import com.openclassrooms.starterjwt.security.services.UserDetailsImpl;
 
 import io.jsonwebtoken.*;
+import lombok.Setter;
 
+@Setter
 @Component
 public class JwtUtils {
   private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);

@@ -177,13 +177,7 @@ public class UserControllerTest {
 
         when(jwtUtils.generateJwtToken(authentication)).thenReturn(jwts);
 
-        String token = jwtUtils.generateJwtToken(authentication);
-
-        when(jwtUtils.getUserNameFromJwtToken(token)).thenReturn(user.getEmail());
-        when(jwtUtils.validateJwtToken(token)).thenReturn(true);
-
-        String tokenUserName = jwtUtils.getUserNameFromJwtToken(token);
-        Boolean tokenValidate = jwtUtils.validateJwtToken(token);
+        jwtUtils.generateJwtToken(authentication);
 
         when(userService.findById(user.getId())).thenReturn(user);
         doNothing().when(userService).delete(user.getId());
@@ -191,12 +185,8 @@ public class UserControllerTest {
         ResponseEntity<?> responseEntity = userController.save("1");
 
         verify(userService, times(1)).delete(user.getId());
-        verify(jwtUtils, times(1)).getUserNameFromJwtToken(token);
-        verify(jwtUtils, times(1)).validateJwtToken(token);
         
         Assertions.assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
-        Assertions.assertThat(tokenUserName).isEqualTo(user.getEmail());
-        Assertions.assertThat(tokenValidate).isTrue();
     }
     
     @Test

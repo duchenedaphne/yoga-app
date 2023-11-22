@@ -20,9 +20,9 @@ import com.openclassrooms.starterjwt.security.services.UserDetailsImpl;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-import org.assertj.core.api.Assertions;
-
 import java.util.Date;
+
+import org.assertj.core.api.Assertions;
 
 @ExtendWith(MockitoExtension.class)
 public class JwtUtilsTest {
@@ -40,22 +40,29 @@ public class JwtUtilsTest {
     @BeforeEach
     public void init() {
 
+        jwtUtils.setJwtSecret(jwtSecret);
+        jwtUtils.setJwtExpirationMs(jwtExpirationMs);
+
         userDetails = new UserDetailsImpl(1L, "test@email.com", "User", "Basic", false, "password");
 
         authentication = new UsernamePasswordAuthenticationToken(userDetails, null);
 
-        token = Jwts.builder()
-            .setSubject((userDetails.getUsername()))
-            .setIssuedAt(new Date())
-            .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-            .signWith(SignatureAlgorithm.HS512, jwtSecret)
-            .compact();
+        token = jwtUtils.generateJwtToken(authentication);
+    }
 
-        userName = Jwts.parser()
-        .setSigningKey(jwtSecret)
-        .parseClaimsJws(token)
-        .getBody()
-        .getSubject();
+    @Test
+    public void getUsernameFromJwtToken() {
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        userName = jwtUtils.getUserNameFromJwtToken(token);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+        
+        Assertions.assertThat(userName).isEqualTo("test@email.com");
     }
 
     @Test
@@ -65,16 +72,89 @@ public class JwtUtilsTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
-        request.setParameter("authToken", token);
-
-        Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
 
         Boolean tokenValidate = jwtUtils.validateJwtToken(token);
 
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
         
-        Assertions.assertThat(userName).isEqualTo("test@email.com");
+        Assertions.assertThat(tokenValidate).isTrue();
+    }
+
+    @Test
+    public void tokenValidate_withWrongSignature_shouldReturn_False() {
+
+        String tokenFalse = Jwts.builder()
+        .setSubject("test@email.com")
+        .setIssuedAt(new Date())
+        .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+        .signWith(SignatureAlgorithm.HS512, "jwtSecret")
+        .compact();
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Boolean tokenValidate = jwtUtils.validateJwtToken(tokenFalse);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+        
+        Assertions.assertThat(tokenValidate).isFalse();
+    }
+
+    @Test
+    public void tokenValidate_withWrongToken_shouldReturn_False() {
+
+        String tokenFalse = "token";
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Boolean tokenValidate = jwtUtils.validateJwtToken(tokenFalse);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+        
+        Assertions.assertThat(tokenValidate).isFalse();
+    }
+
+    @Test
+    public void tokenValidate_withExpiredJwt_shouldReturn_False() {
+
+        String tokenFalse = Jwts.builder()
+        .setSubject("test@email.com")
+        .setIssuedAt(new Date())
+        .setExpiration(new Date((new Date()).getTime() - jwtExpirationMs))
+        .signWith(SignatureAlgorithm.HS512, jwtSecret)
+        .compact();
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Boolean tokenValidate = jwtUtils.validateJwtToken(tokenFalse);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+        
+        Assertions.assertThat(tokenValidate).isFalse();
+    }
+
+    @Test
+    public void tokenValidate_withEmptyToken_shouldReturn_False() {
+
+        String tokenFalse = null;
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Boolean tokenValidate = jwtUtils.validateJwtToken(tokenFalse);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+        
         Assertions.assertThat(tokenValidate).isFalse();
     }
 }
